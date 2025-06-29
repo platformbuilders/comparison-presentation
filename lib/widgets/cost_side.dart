@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:intl/intl.dart';
 import '../theme/app_colors.dart';
+import 'cash_flow_chart.dart';
 
 class CostSide extends StatefulWidget {
   final bool isCompra;
@@ -78,22 +79,43 @@ class _CostSideState extends State<CostSide> {
       color: widget.isCompra ? AppColors.blueSide : AppColors.blackSide,
       child: Padding(
         padding: EdgeInsets.all(isDesktop ? 48.0 : 24.0),
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            _buildHeader(),
-            const SizedBox(height: 32),
-            _buildMainValue(numberFormat),
-            const SizedBox(height: 24),
-            _buildInput(context),
-            const SizedBox(height: 48),
-            _buildCustoMedio(numberFormat),
-            const SizedBox(height: 24),
-            _buildDetalhes(numberFormat),
-          ],
-        ),
+        child: isDesktop 
+          ? _buildContent(numberFormat, false)
+          : SingleChildScrollView(
+              child: _buildContent(numberFormat, true)
+            ),
       ),
+    );
+  }
+
+  Widget _buildContent(NumberFormat numberFormat, bool isMobile) {
+    final fluxos = widget.detalhes['fluxos'] as List<double>?;
+    final hasValidFluxos = fluxos != null && fluxos.isNotEmpty;
+    
+    return Column(
+      mainAxisAlignment: MainAxisAlignment.start,
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        _buildHeader(),
+        SizedBox(height: isMobile ? 24 : 32),
+        _buildMainValue(numberFormat),
+        SizedBox(height: isMobile ? 16 : 24),
+        _buildInput(context),
+        SizedBox(height: isMobile ? 32 : 48),
+        _buildCustoMedio(numberFormat),
+        SizedBox(height: isMobile ? 16 : 24),
+        _buildDetalhes(numberFormat),
+        if (hasValidFluxos) ...[
+          SizedBox(height: isMobile ? 12 : 16),
+          CashFlowChart(
+            fluxosCompra: widget.isCompra ? fluxos : [],
+            fluxosLocacao: !widget.isCompra ? fluxos : [],
+            periodoAnos: widget.periodoAnos,
+            isCompra: widget.isCompra,
+          ),
+        ],
+        if (isMobile) const SizedBox(height: 20), // Espaço extra no final para mobile
+      ],
     );
   }
 
@@ -228,25 +250,71 @@ class _CostSideState extends State<CostSide> {
           ),
         ),
         const SizedBox(height: 8),
-        if (widget.isCompra) ...[
-          _buildDetalheItem('CAPEX inicial', format.format(widget.detalhes['capex'] ?? 0)),
-          _buildDetalheItem('Frete envio', format.format(widget.detalhes['freteEnvio'] ?? 0)),
-          _buildDetalheItem('Manutenção anual', format.format(widget.detalhes['manutencaoAnual'] ?? 0)),
-          _buildDetalheItem('Período', widget.detalhes['periodo'] ?? '5 anos'),
-          _buildDetalheItem('Tipo de cálculo', widget.detalhes['tipoCalculo'] ?? 'Nominal'),
-        ] else ...[
-          _buildDetalheItem('Valor mensal', format.format(widget.detalhes['opexMensal'] ?? 0)),
-          _buildDetalheItem('Frete envio', format.format(widget.detalhes['freteEnvio'] ?? 0)),
-          _buildDetalheItem('Frete retorno', format.format(widget.detalhes['freteRetorno'] ?? 0)),
-          _buildDetalheItem('Manutenção inclusa', widget.detalhes['manutencaoInclusa'] == true ? 'Sim' : 'Não'),
-          _buildDetalheItem('Período', widget.detalhes['periodo'] ?? '5 anos'),
-          _buildDetalheItem('Tipo de cálculo', widget.detalhes['tipoCalculo'] ?? 'Nominal'),
-        ],
+        _buildComposicaoCusto(format),
+        const SizedBox(height: 12),
+        _buildBeneficiosFiscais(format),
       ],
     );
   }
 
-  Widget _buildDetalheItem(String label, String value) {
+  Widget _buildComposicaoCusto(NumberFormat format) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(
+          'Composição do Custo',
+          style: TextStyle(
+            color: AppColors.white.withOpacity(0.9),
+            fontSize: 13,
+            fontWeight: FontWeight.w600,
+          ),
+        ),
+        const SizedBox(height: 6),
+        if (widget.isCompra) ...[
+          _buildDetalheItem('CAPEX inicial', format.format(widget.detalhes['capex'] ?? 0)),
+          _buildDetalheItem('Frete envio', format.format(widget.detalhes['freteEnvio'] ?? 0)),
+          _buildDetalheItem('Frete retorno', format.format(widget.detalhes['freteRetorno'] ?? 0)),
+          _buildDetalheItem('Manutenção anual', format.format(widget.detalhes['manutencaoAnual'] ?? 0)),
+        ] else ...[
+          _buildDetalheItem('Valor mensal', format.format(widget.detalhes['opexMensal'] ?? 0)),
+          _buildDetalheItem('Manutenção inclusa', widget.detalhes['manutencaoInclusa'] == true ? 'Sim' : 'Não'),
+        ],
+        _buildDetalheItem('Período', widget.detalhes['periodo'] ?? '3 anos'),
+        _buildDetalheItem('Tipo de cálculo', widget.detalhes['tipoCalculo'] ?? 'Nominal'),
+      ],
+    );
+  }
+
+  Widget _buildBeneficiosFiscais(NumberFormat format) {
+    final beneficioAnual = widget.detalhes['beneficioFiscalAnual'] ?? 0.0;
+    final beneficioMensal = widget.detalhes['beneficioFiscalMensal'] ?? 0.0;
+    final aliquota = widget.detalhes['aliquotaIR'] ?? '25%';
+    
+    if (beneficioAnual == 0.0) return const SizedBox.shrink();
+    
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(
+          'Benefícios Fiscais',
+          style: TextStyle(
+            color: Colors.green.withOpacity(0.9),
+            fontSize: 13,
+            fontWeight: FontWeight.w600,
+          ),
+        ),
+        const SizedBox(height: 6),
+        _buildDetalheItem('Alíquota IR/CSLL', aliquota.toString(), Colors.green),
+        if (widget.isCompra)
+          _buildDetalheItem('Economia depreciação/ano', format.format(beneficioAnual), Colors.green)
+        else
+          _buildDetalheItem('Economia dedução/mês', format.format(beneficioMensal), Colors.green),
+        _buildDetalheItem('Custo líquido/mês', format.format(widget.detalhes['custoLiquido'] ?? 0), Colors.green),
+      ],
+    );
+  }
+
+  Widget _buildDetalheItem(String label, String value, [Color? cor]) {
     return Padding(
       padding: const EdgeInsets.only(bottom: 4),
       child: Row(
@@ -262,7 +330,7 @@ class _CostSideState extends State<CostSide> {
           Text(
             value,
             style: TextStyle(
-              color: AppColors.white.withOpacity(0.8),
+              color: cor ?? AppColors.white.withOpacity(0.8),
               fontSize: 11,
               fontWeight: FontWeight.w500,
             ),

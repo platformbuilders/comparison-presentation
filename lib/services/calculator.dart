@@ -17,14 +17,26 @@ class Calculator {
 
   static CalculationResult calcularCompra(CalcParams params) {
     final meses = params.periodoAnos * 12;
-    final capex = params.valorCompra + frete + (params.valorCompra * seguroTx);
+    final capex = params.valorCompra + frete + frete + (params.valorCompra * seguroTx);
     final manutAnual = params.valorCompra * params.manutencaoPct / 100;
     final garantiaExtra = params.valorCompra * 0.03;
+    
+    // Cálculo do benefício fiscal da depreciação
+    final depreciacaoAnual = params.valorCompra * params.taxaDepreciacao / 100;
+    final beneficioFiscalAnual = params.considerarBeneficioFiscal 
+        ? depreciacaoAnual * params.aliquotaIR / 100 
+        : 0.0;
+    final beneficioFiscalMensal = beneficioFiscalAnual / 12;
     
     final fluxos = <double>[-capex];
     
     for (int m = 1; m <= meses; m++) {
       double fluxoMensal = -(manutAnual / 12);
+      
+      // Adicionar benefício fiscal da depreciação
+      if (params.considerarBeneficioFiscal) {
+        fluxoMensal += beneficioFiscalMensal;
+      }
       
       if (m == meses && params.considerarResidual) {
         fluxoMensal += params.valorCompra * params.valorResidual / 100;
@@ -53,10 +65,17 @@ class Calculator {
       detalhes: {
         'capex': capex,
         'freteEnvio': frete,
+        'freteRetorno': frete,
         'manutencaoAnual': manutAnual,
         'garantiaExtra': garantiaExtra,
+        'depreciacaoAnual': depreciacaoAnual,
+        'beneficioFiscalAnual': beneficioFiscalAnual,
+        'beneficioFiscalMensal': beneficioFiscalMensal,
+        'custoLiquido': custoMedio,
         'periodo': '${params.periodoAnos} anos',
         'tipoCalculo': params.usarValorNominal ? 'Nominal' : 'VPL',
+        'aliquotaIR': '${params.aliquotaIR}%',
+        'fluxos': fluxos,
       },
     );
   }
@@ -66,6 +85,12 @@ class Calculator {
     final opexMensal = params.valorLocacao;
     final manutAnual = params.valorCompra * params.manutencaoPct / 100;
     
+    // Cálculo do benefício fiscal da locação
+    final beneficioFiscalMensal = params.considerarBeneficioFiscal 
+        ? opexMensal * params.aliquotaIR / 100 
+        : 0.0;
+    final beneficioFiscalAnual = beneficioFiscalMensal * 12;
+    
     final fluxos = <double>[];
     
     for (int m = 1; m <= meses; m++) {
@@ -73,6 +98,11 @@ class Calculator {
       
       if (!params.manutencaoInclusa) {
         fluxoMensal -= manutAnual / 12;
+      }
+      
+      // Adicionar benefício fiscal da locação
+      if (params.considerarBeneficioFiscal) {
+        fluxoMensal += beneficioFiscalMensal;
       }
       
       fluxos.add(fluxoMensal);
@@ -100,8 +130,13 @@ class Calculator {
         'freteEnvio': 0.0,
         'freteRetorno': 0.0,
         'manutencaoInclusa': params.manutencaoInclusa,
+        'beneficioFiscalMensal': beneficioFiscalMensal,
+        'beneficioFiscalAnual': beneficioFiscalAnual,
+        'custoLiquido': custoMedio,
         'periodo': '${params.periodoAnos} anos',
         'tipoCalculo': params.usarValorNominal ? 'Nominal' : 'VPL',
+        'aliquotaIR': '${params.aliquotaIR}%',
+        'fluxos': fluxos,
       },
     );
   }

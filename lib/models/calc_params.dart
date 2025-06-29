@@ -9,6 +9,9 @@ class CalcParams {
   final double manutencaoPct;
   final bool usarValorNominal;
   final int periodoAnos;
+  final double aliquotaIR;
+  final double taxaDepreciacao;
+  final bool considerarBeneficioFiscal;
 
   const CalcParams({
     this.valorCompra = 50000,
@@ -20,7 +23,10 @@ class CalcParams {
     this.manutencaoInclusa = true,
     this.manutencaoPct = 5,
     this.usarValorNominal = true,
-    this.periodoAnos = 5,
+    this.periodoAnos = 3,
+    this.aliquotaIR = 25.0,
+    this.taxaDepreciacao = 20.0,
+    this.considerarBeneficioFiscal = true,
   });
 
   CalcParams copyWith({
@@ -34,6 +40,9 @@ class CalcParams {
     double? manutencaoPct,
     bool? usarValorNominal,
     int? periodoAnos,
+    double? aliquotaIR,
+    double? taxaDepreciacao,
+    bool? considerarBeneficioFiscal,
   }) {
     return CalcParams(
       valorCompra: valorCompra ?? this.valorCompra,
@@ -46,6 +55,9 @@ class CalcParams {
       manutencaoPct: manutencaoPct ?? this.manutencaoPct,
       usarValorNominal: usarValorNominal ?? this.usarValorNominal,
       periodoAnos: periodoAnos ?? this.periodoAnos,
+      aliquotaIR: aliquotaIR ?? this.aliquotaIR,
+      taxaDepreciacao: taxaDepreciacao ?? this.taxaDepreciacao,
+      considerarBeneficioFiscal: considerarBeneficioFiscal ?? this.considerarBeneficioFiscal,
     );
   }
 
@@ -60,6 +72,9 @@ class CalcParams {
         'manutencaoPct': manutencaoPct,
         'usarValorNominal': usarValorNominal,
         'periodoAnos': periodoAnos,
+        'aliquotaIR': aliquotaIR,
+        'taxaDepreciacao': taxaDepreciacao,
+        'considerarBeneficioFiscal': considerarBeneficioFiscal,
       };
 
   factory CalcParams.fromJson(Map<String, dynamic> json) {
@@ -73,7 +88,10 @@ class CalcParams {
       manutencaoInclusa: json['manutencaoInclusa'] ?? true,
       manutencaoPct: (json['manutencaoPct'] ?? 5).toDouble(),
       usarValorNominal: json['usarValorNominal'] ?? true,
-      periodoAnos: json['periodoAnos'] ?? 5,
+      periodoAnos: json['periodoAnos'] ?? 3,
+      aliquotaIR: (json['aliquotaIR'] ?? 25.0).toDouble(),
+      taxaDepreciacao: (json['taxaDepreciacao'] ?? 20.0).toDouble(),
+      considerarBeneficioFiscal: json['considerarBeneficioFiscal'] ?? true,
     );
   }
 }

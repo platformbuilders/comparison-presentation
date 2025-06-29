@@ -196,7 +196,19 @@ class HomeScreen extends StatelessWidget {
                 max: 5,
                 divisions: 4,
                 onChanged: (value) {
-                  repository.calcParams.update({'periodoAnos': value.toInt()});
+                  final newPeriodo = value.toInt();
+                  final currentParams = params;
+                  
+                  final equivalente = Calculator.calcularEquivalente(
+                    valorBase: currentParams.valorCompra,
+                    params: currentParams.copyWith(periodoAnos: newPeriodo),
+                    isCompra: true,
+                  );
+                  
+                  repository.calcParams.update({
+                    'periodoAnos': newPeriodo,
+                    'valorLocacao': equivalente,
+                  });
                 },
               ),
             ),
@@ -268,6 +280,40 @@ class HomeScreen extends StatelessWidget {
                       activeColor: AppColors.blueSide,
                     ),
                     currentParams.usarValorNominal ? 'Nominal' : 'VPL (10% a.a.)',
+                  ),
+                  const SizedBox(height: 24),
+                  _buildSettingItem(
+                    'Benefícios Fiscais',
+                    'Considerar economia de IR/CSLL nos cálculos',
+                    Switch(
+                      value: currentParams.considerarBeneficioFiscal,
+                      onChanged: (value) {
+                        repository.calcParams.update({'considerarBeneficioFiscal': value});
+                        setState(() {});
+                      },
+                      activeColor: AppColors.blueSide,
+                    ),
+                    currentParams.considerarBeneficioFiscal ? 'Ativado' : 'Desativado',
+                  ),
+                  const SizedBox(height: 24),
+                  _buildNumericSetting(
+                    'Alíquota IR/CSLL (%)',
+                    'Taxa de imposto sobre lucro (IR + CSLL)',
+                    currentParams.aliquotaIR,
+                    (value) {
+                      repository.calcParams.update({'aliquotaIR': value});
+                      setState(() {});
+                    },
+                  ),
+                  const SizedBox(height: 24),
+                  _buildNumericSetting(
+                    'Taxa Depreciação (%)',
+                    'Percentual de depreciação anual do equipamento',
+                    currentParams.taxaDepreciacao,
+                    (value) {
+                      repository.calcParams.update({'taxaDepreciacao': value});
+                      setState(() {});
+                    },
                   ),
                   const SizedBox(height: 32),
                   SizedBox(
@@ -342,6 +388,59 @@ class HomeScreen extends StatelessWidget {
             fontSize: 12,
             fontWeight: FontWeight.w500,
           ),
+        ),
+      ],
+    );
+  }
+
+  Widget _buildNumericSetting(String title, String description, double value, Function(double) onChanged) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(
+          title,
+          style: const TextStyle(
+            color: AppColors.white,
+            fontSize: 16,
+            fontWeight: FontWeight.w600,
+          ),
+        ),
+        const SizedBox(height: 4),
+        Text(
+          description,
+          style: TextStyle(
+            color: AppColors.white.withOpacity(0.7),
+            fontSize: 14,
+          ),
+        ),
+        const SizedBox(height: 8),
+        Row(
+          children: [
+            Expanded(
+              child: Slider(
+                value: value,
+                min: title.contains('Alíquota') ? 0 : 1,
+                max: title.contains('Alíquota') ? 50 : 50,
+                divisions: title.contains('Alíquota') ? 50 : 49,
+                onChanged: onChanged,
+                activeColor: AppColors.blueSide,
+                inactiveColor: AppColors.blueSide.withOpacity(0.3),
+              ),
+            ),
+            const SizedBox(width: 12),
+            SizedBox(
+              width: 60,
+              child: Text(
+                '${value.toStringAsFixed(1)}%',
+                style: const TextStyle(
+                  color: AppColors.white,
+                  fontSize: 14,
+                  fontWeight: FontWeight.w600,
+                ),
+                textAlign: TextAlign.end,
+              ),
+            ),
+          ],
         ),
       ],
     );

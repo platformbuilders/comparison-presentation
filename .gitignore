@@ -75,7 +75,6 @@ app.*.map.json
 coverage/
 
 # Web related
-lib/generated_plugin_registrant.dart
 
 # Temporary backup files
 *.bak
