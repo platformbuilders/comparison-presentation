@@ -9,6 +9,7 @@ class CostSide extends StatefulWidget {
   final double custoMedio;
   final Function(double) onChanged;
   final Map<String, dynamic> detalhes;
+  final int periodoAnos;
 
   const CostSide({
     super.key,
@@ -17,6 +18,7 @@ class CostSide extends StatefulWidget {
     required this.custoMedio,
     required this.onChanged,
     required this.detalhes,
+    required this.periodoAnos,
   });
 
   @override
@@ -157,23 +159,55 @@ class _CostSideState extends State<CostSide> {
   }
 
   Widget _buildCustoMedio(NumberFormat format) {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
+    final custoTotal = widget.custoMedio * widget.periodoAnos * 12;
+    
+    return Row(
       children: [
-        Text(
-          'Custo médio mensal',
-          style: TextStyle(
-            color: AppColors.white.withOpacity(0.7),
-            fontSize: 14,
+        Expanded(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(
+                'Custo médio mensal',
+                style: TextStyle(
+                  color: AppColors.white.withOpacity(0.7),
+                  fontSize: 12,
+                ),
+              ),
+              const SizedBox(height: 8),
+              Text(
+                format.format(widget.custoMedio),
+                style: const TextStyle(
+                  color: AppColors.white,
+                  fontSize: 24,
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
+            ],
           ),
         ),
-        const SizedBox(height: 8),
-        Text(
-          format.format(widget.custoMedio),
-          style: const TextStyle(
-            color: AppColors.white,
-            fontSize: 28,
-            fontWeight: FontWeight.bold,
+        const SizedBox(width: 16),
+        Expanded(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(
+                'Custo total',
+                style: TextStyle(
+                  color: AppColors.white.withOpacity(0.7),
+                  fontSize: 12,
+                ),
+              ),
+              const SizedBox(height: 8),
+              Text(
+                format.format(custoTotal),
+                style: const TextStyle(
+                  color: AppColors.white,
+                  fontSize: 24,
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
+            ],
           ),
         ),
       ],
@@ -198,14 +232,14 @@ class _CostSideState extends State<CostSide> {
           _buildDetalheItem('CAPEX inicial', format.format(widget.detalhes['capex'] ?? 0)),
           _buildDetalheItem('Frete envio', format.format(widget.detalhes['freteEnvio'] ?? 0)),
           _buildDetalheItem('Manutenção anual', format.format(widget.detalhes['manutencaoAnual'] ?? 0)),
-          _buildDetalheItem('Período', '60 meses'),
+          _buildDetalheItem('Período', widget.detalhes['periodo'] ?? '5 anos'),
           _buildDetalheItem('Tipo de cálculo', widget.detalhes['tipoCalculo'] ?? 'Nominal'),
         ] else ...[
           _buildDetalheItem('Valor mensal', format.format(widget.detalhes['opexMensal'] ?? 0)),
           _buildDetalheItem('Frete envio', format.format(widget.detalhes['freteEnvio'] ?? 0)),
           _buildDetalheItem('Frete retorno', format.format(widget.detalhes['freteRetorno'] ?? 0)),
           _buildDetalheItem('Manutenção inclusa', widget.detalhes['manutencaoInclusa'] == true ? 'Sim' : 'Não'),
-          _buildDetalheItem('Período', '60 meses'),
+          _buildDetalheItem('Período', widget.detalhes['periodo'] ?? '5 anos'),
           _buildDetalheItem('Tipo de cálculo', widget.detalhes['tipoCalculo'] ?? 'Nominal'),
         ],
       ],

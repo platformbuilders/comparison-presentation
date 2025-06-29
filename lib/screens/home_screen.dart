@@ -35,7 +35,10 @@ class HomeScreen extends StatelessWidget {
           ),
         ],
       ),
-      body: StreamBuilder<CalcParams?>(
+      body: Column(
+        children: [
+          Expanded(
+            child: StreamBuilder<CalcParams?>(
         initialData: repository.calcParams.currentValue,
         stream: repository.calcParams.stream,
         builder: (context, snapshot) {
@@ -60,6 +63,7 @@ class HomeScreen extends StatelessWidget {
                     value: params.valorCompra,
                     custoMedio: compraResult.custoMedioMensal,
                     detalhes: compraResult.detalhes,
+                    periodoAnos: params.periodoAnos,
                     onChanged: (newValue) {
                       final equivalente = Calculator.calcularEquivalente(
                         valorBase: newValue,
@@ -79,6 +83,7 @@ class HomeScreen extends StatelessWidget {
                     value: params.valorLocacao,
                     custoMedio: locacaoResult.custoMedioMensal,
                     detalhes: locacaoResult.detalhes,
+                    periodoAnos: params.periodoAnos,
                     onChanged: (newValue) {
                       final equivalente = Calculator.calcularEquivalente(
                         valorBase: newValue,
@@ -105,6 +110,7 @@ class HomeScreen extends StatelessWidget {
                       value: params.valorCompra,
                       custoMedio: compraResult.custoMedioMensal,
                       detalhes: compraResult.detalhes,
+                      periodoAnos: params.periodoAnos,
                       onChanged: (newValue) {
                         final equivalente = Calculator.calcularEquivalente(
                           valorBase: newValue,
@@ -125,6 +131,7 @@ class HomeScreen extends StatelessWidget {
                       value: params.valorLocacao,
                       custoMedio: locacaoResult.custoMedioMensal,
                       detalhes: locacaoResult.detalhes,
+                      periodoAnos: params.periodoAnos,
                       onChanged: (newValue) {
                         final equivalente = Calculator.calcularEquivalente(
                           valorBase: newValue,
@@ -143,6 +150,71 @@ class HomeScreen extends StatelessWidget {
             );
           }
         },
+            ),
+          ),
+          StreamBuilder<CalcParams?>(
+            initialData: repository.calcParams.currentValue,
+            stream: repository.calcParams.stream,
+            builder: (context, snapshot) {
+              if (!snapshot.hasData) return const SizedBox.shrink();
+              return _buildPeriodSlider(context, repository, snapshot.data!);
+            },
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildPeriodSlider(BuildContext context, DataRepository repository, CalcParams params) {
+    return Container(
+      height: 80,
+      color: AppColors.blackSide.withOpacity(0.8),
+      padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 16),
+      child: Row(
+        children: [
+          Text(
+            'Período:',
+            style: TextStyle(
+              color: AppColors.white.withOpacity(0.8),
+              fontSize: 16,
+              fontWeight: FontWeight.w500,
+            ),
+          ),
+          const SizedBox(width: 16),
+          Expanded(
+            child: SliderTheme(
+              data: SliderTheme.of(context).copyWith(
+                activeTrackColor: AppColors.blueSide,
+                inactiveTrackColor: AppColors.blueSide.withOpacity(0.3),
+                thumbColor: AppColors.blueSide,
+                overlayColor: AppColors.blueSide.withOpacity(0.2),
+                trackHeight: 4,
+              ),
+              child: Slider(
+                value: params.periodoAnos.toDouble(),
+                min: 1,
+                max: 5,
+                divisions: 4,
+                onChanged: (value) {
+                  repository.calcParams.update({'periodoAnos': value.toInt()});
+                },
+              ),
+            ),
+          ),
+          const SizedBox(width: 16),
+          Container(
+            width: 80,
+            child: Text(
+              '${params.periodoAnos} ${params.periodoAnos == 1 ? 'ano' : 'anos'}',
+              style: const TextStyle(
+                color: AppColors.white,
+                fontSize: 16,
+                fontWeight: FontWeight.w600,
+              ),
+              textAlign: TextAlign.end,
+            ),
+          ),
+        ],
       ),
     );
   }
@@ -154,21 +226,27 @@ class HomeScreen extends StatelessWidget {
       context: context,
       backgroundColor: AppColors.blackSide,
       isScrollControlled: true,
-      builder: (context) {
-        return StreamBuilder<CalcParams?>(
-          stream: repository.calcParams.stream,
-          builder: (context, snapshot) {
-            if (!snapshot.hasData) {
-              return const SizedBox.shrink();
-            }
-            
-            final params = snapshot.data!;
-            
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+      ),
+      builder: (modalContext) {
+        return StatefulBuilder(
+          builder: (context, setState) {
+            final currentParams = repository.calcParams.currentValue ?? const CalcParams();
             return Container(
               padding: const EdgeInsets.all(24),
               child: Column(
                 mainAxisSize: MainAxisSize.min,
                 children: [
+                  Container(
+                    width: 40,
+                    height: 4,
+                    margin: const EdgeInsets.only(bottom: 20),
+                    decoration: BoxDecoration(
+                      color: AppColors.white.withOpacity(0.3),
+                      borderRadius: BorderRadius.circular(2),
+                    ),
+                  ),
                   const Text(
                     'Configurações',
                     style: TextStyle(
@@ -182,22 +260,38 @@ class HomeScreen extends StatelessWidget {
                     'Tipo de Cálculo',
                     'Escolha entre valor nominal ou VPL (Valor Presente Líquido)',
                     Switch(
-                      value: params.usarValorNominal,
+                      value: currentParams.usarValorNominal,
                       onChanged: (value) {
                         repository.calcParams.update({'usarValorNominal': value});
+                        setState(() {});
                       },
                       activeColor: AppColors.blueSide,
                     ),
-                    params.usarValorNominal ? 'Nominal' : 'VPL (10% a.a.)',
+                    currentParams.usarValorNominal ? 'Nominal' : 'VPL (10% a.a.)',
                   ),
                   const SizedBox(height: 32),
-                  TextButton(
-                    onPressed: () => Navigator.pop(context),
-                    child: const Text(
-                      'Fechar',
-                      style: TextStyle(color: AppColors.blueSide),
+                  SizedBox(
+                    width: double.infinity,
+                    child: ElevatedButton(
+                      onPressed: () => Navigator.pop(context),
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: AppColors.blueSide,
+                        padding: const EdgeInsets.symmetric(vertical: 16),
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(8),
+                        ),
+                      ),
+                      child: const Text(
+                        'Fechar',
+                        style: TextStyle(
+                          color: AppColors.white,
+                          fontSize: 16,
+                          fontWeight: FontWeight.w600,
+                        ),
+                      ),
                     ),
                   ),
+                  SizedBox(height: MediaQuery.of(context).viewInsets.bottom),
                 ],
               ),
             );

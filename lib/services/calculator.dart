@@ -2,7 +2,6 @@ import 'dart:math';
 import '../models/calc_params.dart';
 
 class Calculator {
-  static const int meses = 60;
   static const double frete = 120.0;
   static const double seguroTx = 0.01;
   static const double adminLocacao = 30.0;
@@ -17,6 +16,7 @@ class Calculator {
   }
 
   static CalculationResult calcularCompra(CalcParams params) {
+    final meses = params.periodoAnos * 12;
     final capex = params.valorCompra + frete + (params.valorCompra * seguroTx);
     final manutAnual = params.valorCompra * params.manutencaoPct / 100;
     final garantiaExtra = params.valorCompra * 0.03;
@@ -55,18 +55,18 @@ class Calculator {
         'freteEnvio': frete,
         'manutencaoAnual': manutAnual,
         'garantiaExtra': garantiaExtra,
+        'periodo': '${params.periodoAnos} anos',
         'tipoCalculo': params.usarValorNominal ? 'Nominal' : 'VPL',
       },
     );
   }
 
   static CalculationResult calcularLocacao(CalcParams params) {
+    final meses = params.periodoAnos * 12;
     final opexMensal = params.valorLocacao;
     final manutAnual = params.valorCompra * params.manutencaoPct / 100;
     
-    final fluxos = <double>[
-      -(params.valorLocacao * seguroTx + adminLocacao),
-    ];
+    final fluxos = <double>[];
     
     for (int m = 1; m <= meses; m++) {
       double fluxoMensal = -opexMensal;
@@ -77,8 +77,6 @@ class Calculator {
       
       fluxos.add(fluxoMensal);
     }
-    
-    fluxos.add(-(params.valorLocacao * seguroTx));
     
     final aplicarDesconto = !params.usarValorNominal;
     final taxa = aplicarDesconto ? taxaMensal(params.taxaDesconto) : 0.0;
@@ -102,6 +100,7 @@ class Calculator {
         'freteEnvio': 0.0,
         'freteRetorno': 0.0,
         'manutencaoInclusa': params.manutencaoInclusa,
+        'periodo': '${params.periodoAnos} anos',
         'tipoCalculo': params.usarValorNominal ? 'Nominal' : 'VPL',
       },
     );

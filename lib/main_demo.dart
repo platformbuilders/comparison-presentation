@@ -63,6 +63,7 @@ class _ComparisonCalculatorDemoState extends State<ComparisonCalculatorDemo> {
                       value: params.valorCompra,
                       custoMedio: compraResult.custoMedioMensal,
                       detalhes: compraResult.detalhes,
+                      periodoAnos: params.periodoAnos,
                       onChanged: (newValue) {
                         setState(() {
                           final equivalente = Calculator.calcularEquivalente(
@@ -84,6 +85,7 @@ class _ComparisonCalculatorDemoState extends State<ComparisonCalculatorDemo> {
                       value: params.valorLocacao,
                       custoMedio: locacaoResult.custoMedioMensal,
                       detalhes: locacaoResult.detalhes,
+                      periodoAnos: params.periodoAnos,
                       onChanged: (newValue) {
                         setState(() {
                           final equivalente = Calculator.calcularEquivalente(
@@ -112,6 +114,7 @@ class _ComparisonCalculatorDemoState extends State<ComparisonCalculatorDemo> {
                         value: params.valorCompra,
                         custoMedio: compraResult.custoMedioMensal,
                         detalhes: compraResult.detalhes,
+                        periodoAnos: params.periodoAnos,
                         onChanged: (newValue) {
                           setState(() {
                             final equivalente = Calculator.calcularEquivalente(
@@ -134,6 +137,7 @@ class _ComparisonCalculatorDemoState extends State<ComparisonCalculatorDemo> {
                         value: params.valorLocacao,
                         custoMedio: locacaoResult.custoMedioMensal,
                         detalhes: locacaoResult.detalhes,
+                        periodoAnos: params.periodoAnos,
                         onChanged: (newValue) {
                           setState(() {
                             final equivalente = Calculator.calcularEquivalente(

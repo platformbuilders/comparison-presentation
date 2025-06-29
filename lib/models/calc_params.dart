@@ -8,6 +8,7 @@ class CalcParams {
   final bool manutencaoInclusa;
   final double manutencaoPct;
   final bool usarValorNominal;
+  final int periodoAnos;
 
   const CalcParams({
     this.valorCompra = 50000,
@@ -19,6 +20,7 @@ class CalcParams {
     this.manutencaoInclusa = true,
     this.manutencaoPct = 5,
     this.usarValorNominal = true,
+    this.periodoAnos = 5,
   });
 
   CalcParams copyWith({
@@ -31,6 +33,7 @@ class CalcParams {
     bool? manutencaoInclusa,
     double? manutencaoPct,
     bool? usarValorNominal,
+    int? periodoAnos,
   }) {
     return CalcParams(
       valorCompra: valorCompra ?? this.valorCompra,
@@ -42,6 +45,7 @@ class CalcParams {
       manutencaoInclusa: manutencaoInclusa ?? this.manutencaoInclusa,
       manutencaoPct: manutencaoPct ?? this.manutencaoPct,
       usarValorNominal: usarValorNominal ?? this.usarValorNominal,
+      periodoAnos: periodoAnos ?? this.periodoAnos,
     );
   }
 
@@ -55,6 +59,7 @@ class CalcParams {
         'manutencaoInclusa': manutencaoInclusa,
         'manutencaoPct': manutencaoPct,
         'usarValorNominal': usarValorNominal,
+        'periodoAnos': periodoAnos,
       };
 
   factory CalcParams.fromJson(Map<String, dynamic> json) {
@@ -68,6 +73,7 @@ class CalcParams {
       manutencaoInclusa: json['manutencaoInclusa'] ?? true,
       manutencaoPct: (json['manutencaoPct'] ?? 5).toDouble(),
       usarValorNominal: json['usarValorNominal'] ?? true,
+      periodoAnos: json['periodoAnos'] ?? 5,
     );
   }
 }
