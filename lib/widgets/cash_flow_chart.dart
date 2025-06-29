@@ -119,19 +119,29 @@ class CashFlowChart extends StatelessWidget {
     return Row(
       mainAxisAlignment: MainAxisAlignment.spaceBetween,
       children: [
-        Text(
-          label,
-          style: TextStyle(
-            color: AppColors.white.withOpacity(0.7),
-            fontSize: isDesktop ? 12 : 11,
+        Expanded(
+          flex: 2,
+          child: Text(
+            label,
+            style: TextStyle(
+              color: AppColors.white.withOpacity(0.7),
+              fontSize: isDesktop ? 12 : 11,
+            ),
+            overflow: TextOverflow.ellipsis,
           ),
         ),
-        Text(
-          valor,
-          style: TextStyle(
-            color: cor,
-            fontSize: isDesktop ? 12 : 11,
-            fontWeight: FontWeight.w600,
+        const SizedBox(width: 8),
+        Expanded(
+          flex: 1,
+          child: Text(
+            valor,
+            style: TextStyle(
+              color: cor,
+              fontSize: isDesktop ? 12 : 11,
+              fontWeight: FontWeight.w600,
+            ),
+            textAlign: TextAlign.end,
+            overflow: TextOverflow.ellipsis,
           ),
         ),
       ],

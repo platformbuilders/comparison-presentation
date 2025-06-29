@@ -64,6 +64,7 @@ class HomeScreen extends StatelessWidget {
                     custoMedio: compraResult.custoMedioMensal,
                     detalhes: compraResult.detalhes,
                     periodoAnos: params.periodoAnos,
+                    onSettingsPressed: () => _showSettingsModal(context),
                     onChanged: (newValue) {
                       final equivalente = Calculator.calcularEquivalente(
                         valorBase: newValue,
@@ -84,6 +85,7 @@ class HomeScreen extends StatelessWidget {
                     custoMedio: locacaoResult.custoMedioMensal,
                     detalhes: locacaoResult.detalhes,
                     periodoAnos: params.periodoAnos,
+                    onSettingsPressed: () => _showSettingsModal(context),
                     onChanged: (newValue) {
                       final equivalente = Calculator.calcularEquivalente(
                         valorBase: newValue,
@@ -111,6 +113,7 @@ class HomeScreen extends StatelessWidget {
                       custoMedio: compraResult.custoMedioMensal,
                       detalhes: compraResult.detalhes,
                       periodoAnos: params.periodoAnos,
+                      onSettingsPressed: () => _showSettingsModal(context),
                       onChanged: (newValue) {
                         final equivalente = Calculator.calcularEquivalente(
                           valorBase: newValue,
@@ -132,6 +135,7 @@ class HomeScreen extends StatelessWidget {
                       custoMedio: locacaoResult.custoMedioMensal,
                       detalhes: locacaoResult.detalhes,
                       periodoAnos: params.periodoAnos,
+                      onSettingsPressed: () => _showSettingsModal(context),
                       onChanged: (newValue) {
                         final equivalente = Calculator.calcularEquivalente(
                           valorBase: newValue,
@@ -152,84 +156,11 @@ class HomeScreen extends StatelessWidget {
         },
             ),
           ),
-          StreamBuilder<CalcParams?>(
-            initialData: repository.calcParams.currentValue,
-            stream: repository.calcParams.stream,
-            builder: (context, snapshot) {
-              if (!snapshot.hasData) return const SizedBox.shrink();
-              return _buildPeriodSlider(context, repository, snapshot.data!);
-            },
-          ),
         ],
       ),
     );
   }
 
-  Widget _buildPeriodSlider(BuildContext context, DataRepository repository, CalcParams params) {
-    return Container(
-      height: 80,
-      color: AppColors.blackSide.withOpacity(0.8),
-      padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 16),
-      child: Row(
-        children: [
-          Text(
-            'Período:',
-            style: TextStyle(
-              color: AppColors.white.withOpacity(0.8),
-              fontSize: 16,
-              fontWeight: FontWeight.w500,
-            ),
-          ),
-          const SizedBox(width: 16),
-          Expanded(
-            child: SliderTheme(
-              data: SliderTheme.of(context).copyWith(
-                activeTrackColor: AppColors.blueSide,
-                inactiveTrackColor: AppColors.blueSide.withOpacity(0.3),
-                thumbColor: AppColors.blueSide,
-                overlayColor: AppColors.blueSide.withOpacity(0.2),
-                trackHeight: 4,
-              ),
-              child: Slider(
-                value: params.periodoAnos.toDouble(),
-                min: 1,
-                max: 5,
-                divisions: 4,
-                onChanged: (value) {
-                  final newPeriodo = value.toInt();
-                  final currentParams = params;
-                  
-                  final equivalente = Calculator.calcularEquivalente(
-                    valorBase: currentParams.valorCompra,
-                    params: currentParams.copyWith(periodoAnos: newPeriodo),
-                    isCompra: true,
-                  );
-                  
-                  repository.calcParams.update({
-                    'periodoAnos': newPeriodo,
-                    'valorLocacao': equivalente,
-                  });
-                },
-              ),
-            ),
-          ),
-          const SizedBox(width: 16),
-          Container(
-            width: 80,
-            child: Text(
-              '${params.periodoAnos} ${params.periodoAnos == 1 ? 'ano' : 'anos'}',
-              style: const TextStyle(
-                color: AppColors.white,
-                fontSize: 16,
-                fontWeight: FontWeight.w600,
-              ),
-              textAlign: TextAlign.end,
-            ),
-          ),
-        ],
-      ),
-    );
-  }
 
   void _showSettingsModal(BuildContext context) {
     final repository = RepositoryProvider.of(context);
@@ -246,9 +177,9 @@ class HomeScreen extends StatelessWidget {
           builder: (context, setState) {
             final currentParams = repository.calcParams.currentValue ?? const CalcParams();
             return Container(
+              height: MediaQuery.of(context).size.height * 0.8,
               padding: const EdgeInsets.all(24),
               child: Column(
-                mainAxisSize: MainAxisSize.min,
                 children: [
                   Container(
                     width: 40,
@@ -268,6 +199,10 @@ class HomeScreen extends StatelessWidget {
                     ),
                   ),
                   const SizedBox(height: 32),
+                  Expanded(
+                    child: SingleChildScrollView(
+                      child: Column(
+                        children: [
                   _buildSettingItem(
                     'Tipo de Cálculo',
                     'Escolha entre valor nominal ou VPL (Valor Presente Líquido)',
@@ -325,7 +260,41 @@ class HomeScreen extends StatelessWidget {
                       setState(() {});
                     },
                   ),
+                  const SizedBox(height: 24),
+                  _buildNumericSetting(
+                    'Taxa de Seguro (%)',
+                    'Percentual do valor do equipamento para seguro',
+                    currentParams.seguroTx,
+                    (value) {
+                      repository.calcParams.update({'seguroTx': value});
+                      setState(() {});
+                    },
+                  ),
+                  const SizedBox(height: 24),
+                  _buildNumericSetting(
+                    'Período (anos)',
+                    'Período de análise para comparação entre compra e locação',
+                    currentParams.periodoAnos.toDouble(),
+                    (value) {
+                      final newPeriodo = value.toInt();
+                      final equivalente = Calculator.calcularEquivalente(
+                        valorBase: currentParams.valorCompra,
+                        params: currentParams.copyWith(periodoAnos: newPeriodo),
+                        isCompra: true,
+                      );
+                      
+                      repository.calcParams.update({
+                        'periodoAnos': newPeriodo,
+                        'valorLocacao': equivalente,
+                      });
+                      setState(() {});
+                    },
+                  ),
                   const SizedBox(height: 32),
+                        ],
+                      ),
+                    ),
+                  ),
                   SizedBox(
                     width: double.infinity,
                     child: ElevatedButton(
@@ -347,7 +316,6 @@ class HomeScreen extends StatelessWidget {
                       ),
                     ),
                   ),
-                  SizedBox(height: MediaQuery.of(context).viewInsets.bottom),
                 ],
               ),
             );
@@ -429,9 +397,9 @@ class HomeScreen extends StatelessWidget {
             Expanded(
               child: Slider(
                 value: value,
-                min: title.contains('Alíquota') ? 0 : (title.contains('Manutenção') ? 0 : 1),
-                max: title.contains('Alíquota') ? 50 : (title.contains('Manutenção') ? 20 : 50),
-                divisions: title.contains('Alíquota') ? 50 : (title.contains('Manutenção') ? 20 : 49),
+                min: title.contains('Alíquota') ? 0 : (title.contains('Manutenção') ? 0 : (title.contains('Seguro') ? 0 : (title.contains('Período') ? 1 : 1))),
+                max: title.contains('Alíquota') ? 50 : (title.contains('Manutenção') ? 20 : (title.contains('Seguro') ? 10 : (title.contains('Período') ? 5 : 50))),
+                divisions: title.contains('Alíquota') ? 500 : (title.contains('Manutenção') ? 200 : (title.contains('Seguro') ? 100 : (title.contains('Período') ? 4 : 490))),
                 onChanged: onChanged,
                 activeColor: AppColors.blueSide,
                 inactiveColor: AppColors.blueSide.withOpacity(0.3),
@@ -439,9 +407,9 @@ class HomeScreen extends StatelessWidget {
             ),
             const SizedBox(width: 12),
             SizedBox(
-              width: 60,
+              width: title.contains('Período') ? 80 : 60,
               child: Text(
-                '${value.toStringAsFixed(1)}%',
+                title.contains('Período') ? '${value.toInt()} ${value.toInt() == 1 ? 'ano' : 'anos'}' : '${value.toStringAsFixed(2)}%',
                 style: const TextStyle(
                   color: AppColors.white,
                   fontSize: 14,

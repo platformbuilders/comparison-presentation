@@ -11,6 +11,7 @@ class CostSide extends StatefulWidget {
   final Function(double) onChanged;
   final Map<String, dynamic> detalhes;
   final int periodoAnos;
+  final VoidCallback? onSettingsPressed;
 
   const CostSide({
     super.key,
@@ -20,6 +21,7 @@ class CostSide extends StatefulWidget {
     required this.onChanged,
     required this.detalhes,
     required this.periodoAnos,
+    this.onSettingsPressed,
   });
 
   @override
@@ -95,18 +97,21 @@ class _CostSideState extends State<CostSide> {
     return Column(
       mainAxisAlignment: MainAxisAlignment.start,
       crossAxisAlignment: CrossAxisAlignment.start,
+      mainAxisSize: MainAxisSize.min,
       children: [
         _buildHeader(),
-        SizedBox(height: isMobile ? 24 : 32),
+        SizedBox(height: isMobile ? 16 : 24),
         _buildMainValue(numberFormat),
-        SizedBox(height: isMobile ? 16 : 24),
+        SizedBox(height: isMobile ? 12 : 16),
         _buildInput(context),
-        SizedBox(height: isMobile ? 32 : 48),
+        SizedBox(height: isMobile ? 20 : 32),
         _buildCustoMedio(numberFormat),
-        SizedBox(height: isMobile ? 16 : 24),
-        _buildDetalhes(numberFormat),
+        SizedBox(height: isMobile ? 12 : 16),
+        Flexible(
+          child: _buildDetalhes(numberFormat),
+        ),
         if (hasValidFluxos) ...[
-          SizedBox(height: isMobile ? 12 : 16),
+          SizedBox(height: isMobile ? 8 : 12),
           CashFlowChart(
             fluxosCompra: widget.isCompra ? fluxos : [],
             fluxosLocacao: !widget.isCompra ? fluxos : [],
@@ -114,7 +119,7 @@ class _CostSideState extends State<CostSide> {
             isCompra: widget.isCompra,
           ),
         ],
-        if (isMobile) const SizedBox(height: 20), // Espaço extra no final para mobile
+        if (isMobile) const SizedBox(height: 16), // Espaço extra no final para mobile
       ],
     );
   }
@@ -132,13 +137,18 @@ class _CostSideState extends State<CostSide> {
   }
 
   Widget _buildMainValue(NumberFormat format) {
-    return Text(
-      format.format(widget.value),
-      style: const TextStyle(
-        color: AppColors.white,
-        fontSize: 42,
-        fontWeight: FontWeight.bold,
-        height: 1,
+    final isDesktop = MediaQuery.of(context).size.width >= 800;
+    
+    return FittedBox(
+      fit: BoxFit.scaleDown,
+      child: Text(
+        format.format(widget.value),
+        style: TextStyle(
+          color: AppColors.white,
+          fontSize: isDesktop ? 42 : 32,
+          fontWeight: FontWeight.bold,
+          height: 1,
+        ),
       ),
     );
   }
@@ -182,6 +192,7 @@ class _CostSideState extends State<CostSide> {
 
   Widget _buildCustoMedio(NumberFormat format) {
     final custoTotal = widget.custoMedio * widget.periodoAnos * 12;
+    final isDesktop = MediaQuery.of(context).size.width >= 800;
     
     return Row(
       children: [
@@ -193,40 +204,78 @@ class _CostSideState extends State<CostSide> {
                 'Custo médio mensal',
                 style: TextStyle(
                   color: AppColors.white.withOpacity(0.7),
-                  fontSize: 12,
+                  fontSize: isDesktop ? 12 : 11,
                 ),
+                overflow: TextOverflow.ellipsis,
               ),
-              const SizedBox(height: 8),
-              Text(
-                format.format(widget.custoMedio),
-                style: const TextStyle(
-                  color: AppColors.white,
-                  fontSize: 24,
-                  fontWeight: FontWeight.bold,
+              SizedBox(height: isDesktop ? 8 : 6),
+              FittedBox(
+                fit: BoxFit.scaleDown,
+                child: Text(
+                  format.format(widget.custoMedio),
+                  style: TextStyle(
+                    color: AppColors.white,
+                    fontSize: isDesktop ? 24 : 20,
+                    fontWeight: FontWeight.bold,
+                  ),
                 ),
               ),
             ],
           ),
         ),
-        const SizedBox(width: 16),
+        SizedBox(width: isDesktop ? 16 : 12),
         Expanded(
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Text(
-                'Custo total',
-                style: TextStyle(
-                  color: AppColors.white.withOpacity(0.7),
-                  fontSize: 12,
+              RichText(
+                text: TextSpan(
+                  children: [
+                    TextSpan(
+                      text: 'Custo total (',
+                      style: TextStyle(
+                        color: AppColors.white.withOpacity(0.7),
+                        fontSize: isDesktop ? 12 : 11,
+                      ),
+                    ),
+                    WidgetSpan(
+                      child: MouseRegion(
+                        cursor: SystemMouseCursors.click,
+                        child: GestureDetector(
+                          onTap: widget.onSettingsPressed,
+                          child: Text(
+                            '${widget.periodoAnos} ${widget.periodoAnos == 1 ? 'ano' : 'anos'}',
+                            style: TextStyle(
+                              color: AppColors.white.withOpacity(0.7),
+                              fontSize: isDesktop ? 12 : 11,
+                              decoration: TextDecoration.underline,
+                              decorationColor: AppColors.white.withOpacity(0.7),
+                            ),
+                          ),
+                        ),
+                      ),
+                    ),
+                    TextSpan(
+                      text: ')',
+                      style: TextStyle(
+                        color: AppColors.white.withOpacity(0.7),
+                        fontSize: isDesktop ? 12 : 11,
+                      ),
+                    ),
+                  ],
                 ),
+                overflow: TextOverflow.ellipsis,
               ),
-              const SizedBox(height: 8),
-              Text(
-                format.format(custoTotal),
-                style: const TextStyle(
-                  color: AppColors.white,
-                  fontSize: 24,
-                  fontWeight: FontWeight.bold,
+              SizedBox(height: isDesktop ? 8 : 6),
+              FittedBox(
+                fit: BoxFit.scaleDown,
+                child: Text(
+                  format.format(custoTotal),
+                  style: TextStyle(
+                    color: AppColors.white,
+                    fontSize: isDesktop ? 24 : 20,
+                    fontWeight: FontWeight.bold,
+                  ),
                 ),
               ),
             ],
@@ -271,16 +320,15 @@ class _CostSideState extends State<CostSide> {
         ),
         const SizedBox(height: 6),
         if (widget.isCompra) ...[
-          _buildDetalheItem('CAPEX inicial', format.format(widget.detalhes['capex'] ?? 0)),
-          _buildDetalheItem('Frete envio', format.format(widget.detalhes['freteEnvio'] ?? 0)),
-          _buildDetalheItem('Frete retorno', format.format(widget.detalhes['freteRetorno'] ?? 0)),
-          _buildDetalheItem('Manutenção anual', format.format(widget.detalhes['manutencaoAnual'] ?? 0)),
+          _buildDetalheItem('Valor do equipamento', format.format(widget.detalhes['valorCompra'] ?? 0)),
+          if ((widget.detalhes['seguro'] ?? 0.0) > 0) 
+            _buildDetalheItem('Seguro (${(widget.detalhes['seguroTx'] ?? 0).toStringAsFixed(1)}%)', format.format(widget.detalhes['seguro'] ?? 0)),
+          _buildDetalheItem('Frete (envio + retorno)', format.format(widget.detalhes['freteTotal'] ?? 0)),
+          _buildDetalheItem('Manutenção anual (${(widget.detalhes['manutencaoPct'] ?? 0).toStringAsFixed(1)}%)', format.format(widget.detalhes['manutencaoAnual'] ?? 0)),
         ] else ...[
           _buildDetalheItem('Valor mensal', format.format(widget.detalhes['opexMensal'] ?? 0)),
           _buildDetalheItem('Manutenção inclusa', widget.detalhes['manutencaoInclusa'] == true ? 'Sim' : 'Não'),
         ],
-        _buildDetalheItem('Período', widget.detalhes['periodo'] ?? '3 anos'),
-        _buildDetalheItem('Tipo de cálculo', widget.detalhes['tipoCalculo'] ?? 'Nominal'),
       ],
     );
   }
@@ -288,7 +336,8 @@ class _CostSideState extends State<CostSide> {
   Widget _buildBeneficiosFiscais(NumberFormat format) {
     final beneficioAnual = widget.detalhes['beneficioFiscalAnual'] ?? 0.0;
     final beneficioMensal = widget.detalhes['beneficioFiscalMensal'] ?? 0.0;
-    final aliquota = widget.detalhes['aliquotaIR'] ?? '25%';
+    final aliquotaNum = widget.detalhes['aliquotaIR'] ?? 25.0;
+    final aliquota = '${aliquotaNum.toStringAsFixed(2)}%';
     
     if (beneficioAnual == 0.0) return const SizedBox.shrink();
     
@@ -304,7 +353,7 @@ class _CostSideState extends State<CostSide> {
           ),
         ),
         const SizedBox(height: 6),
-        _buildDetalheItem('Alíquota IR/CSLL', aliquota.toString(), Colors.green),
+        _buildDetalheItem('Alíquota IR/CSLL (${aliquota})', '', Colors.green),
         if (widget.isCompra)
           _buildDetalheItem('Economia depreciação/ano', format.format(beneficioAnual), Colors.green)
         else
@@ -319,20 +368,32 @@ class _CostSideState extends State<CostSide> {
       padding: const EdgeInsets.only(bottom: 4),
       child: Row(
         mainAxisAlignment: MainAxisAlignment.spaceBetween,
+        crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Text(
-            label,
-            style: TextStyle(
-              color: AppColors.white.withOpacity(0.6),
-              fontSize: 11,
+          Expanded(
+            flex: 3,
+            child: Text(
+              label,
+              style: TextStyle(
+                color: AppColors.white.withOpacity(0.6),
+                fontSize: 11,
+              ),
+              overflow: TextOverflow.ellipsis,
+              maxLines: 2,
             ),
           ),
-          Text(
-            value,
-            style: TextStyle(
-              color: cor ?? AppColors.white.withOpacity(0.8),
-              fontSize: 11,
-              fontWeight: FontWeight.w500,
+          const SizedBox(width: 8),
+          Expanded(
+            flex: 2,
+            child: Text(
+              value,
+              style: TextStyle(
+                color: cor ?? AppColors.white.withOpacity(0.8),
+                fontSize: 11,
+                fontWeight: FontWeight.w500,
+              ),
+              textAlign: TextAlign.end,
+              overflow: TextOverflow.ellipsis,
             ),
           ),
         ],

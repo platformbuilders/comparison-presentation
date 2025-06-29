@@ -3,7 +3,6 @@ import '../models/calc_params.dart';
 
 class Calculator {
   static const double frete = 120.0;
-  static const double seguroTx = 0.01;
   static const double adminLocacao = 30.0;
 
   static double taxaMensal(double taxaAnual) {
@@ -17,12 +16,14 @@ class Calculator {
 
   static CalculationResult calcularCompra(CalcParams params) {
     final meses = params.periodoAnos * 12;
-    final capex = params.valorCompra + frete + frete + (params.valorCompra * seguroTx);
+    final seguro = params.valorCompra * params.seguroTx / 100;
+    final capex = params.valorCompra + frete + frete + seguro;
     final manutAnual = params.valorCompra * params.manutencaoPct / 100;
     final garantiaExtra = params.valorCompra * 0.03;
     
     // Cálculo do benefício fiscal da depreciação
-    final depreciacaoAnual = params.valorCompra * params.taxaDepreciacao / 100;
+    // Depreciação anual baseada no período real (valor / período em anos)
+    final depreciacaoAnual = params.valorCompra / params.periodoAnos;
     final beneficioFiscalAnual = params.considerarBeneficioFiscal 
         ? depreciacaoAnual * params.aliquotaIR / 100 
         : 0.0;
@@ -63,10 +64,13 @@ class Calculator {
       custoMedioMensal: custoMedio,
       fluxos: fluxos,
       detalhes: {
+        'valorCompra': params.valorCompra,
+        'seguro': seguro,
+        'seguroTx': params.seguroTx,
         'capex': capex,
-        'freteEnvio': frete,
-        'freteRetorno': frete,
+        'freteTotal': frete * 2,
         'manutencaoAnual': manutAnual,
+        'manutencaoPct': params.manutencaoPct,
         'garantiaExtra': garantiaExtra,
         'depreciacaoAnual': depreciacaoAnual,
         'beneficioFiscalAnual': beneficioFiscalAnual,
@@ -74,7 +78,7 @@ class Calculator {
         'custoLiquido': custoMedio,
         'periodo': '${params.periodoAnos} anos',
         'tipoCalculo': params.usarValorNominal ? 'Nominal' : 'VPL',
-        'aliquotaIR': '${params.aliquotaIR}%',
+        'aliquotaIR': params.aliquotaIR,
         'fluxos': fluxos,
       },
     );
@@ -127,15 +131,15 @@ class Calculator {
       fluxos: fluxos,
       detalhes: {
         'opexMensal': opexMensal,
-        'freteEnvio': 0.0,
-        'freteRetorno': 0.0,
+        'freteTotal': 0.0,
         'manutencaoInclusa': params.manutencaoInclusa,
+        'manutencaoPct': params.manutencaoPct,
         'beneficioFiscalMensal': beneficioFiscalMensal,
         'beneficioFiscalAnual': beneficioFiscalAnual,
         'custoLiquido': custoMedio,
         'periodo': '${params.periodoAnos} anos',
         'tipoCalculo': params.usarValorNominal ? 'Nominal' : 'VPL',
-        'aliquotaIR': '${params.aliquotaIR}%',
+        'aliquotaIR': params.aliquotaIR,
         'fluxos': fluxos,
       },
     );
