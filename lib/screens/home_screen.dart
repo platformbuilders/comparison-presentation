@@ -315,6 +315,16 @@ class HomeScreen extends StatelessWidget {
                       setState(() {});
                     },
                   ),
+                  const SizedBox(height: 24),
+                  _buildNumericSetting(
+                    'Manutenção Anual (%)',
+                    'Percentual anual do valor do equipamento gasto com manutenção',
+                    currentParams.manutencaoPct,
+                    (value) {
+                      repository.calcParams.update({'manutencaoPct': value});
+                      setState(() {});
+                    },
+                  ),
                   const SizedBox(height: 32),
                   SizedBox(
                     width: double.infinity,
@@ -419,9 +429,9 @@ class HomeScreen extends StatelessWidget {
             Expanded(
               child: Slider(
                 value: value,
-                min: title.contains('Alíquota') ? 0 : 1,
-                max: title.contains('Alíquota') ? 50 : 50,
-                divisions: title.contains('Alíquota') ? 50 : 49,
+                min: title.contains('Alíquota') ? 0 : (title.contains('Manutenção') ? 0 : 1),
+                max: title.contains('Alíquota') ? 50 : (title.contains('Manutenção') ? 20 : 50),
+                divisions: title.contains('Alíquota') ? 50 : (title.contains('Manutenção') ? 20 : 49),
                 onChanged: onChanged,
                 activeColor: AppColors.blueSide,
                 inactiveColor: AppColors.blueSide.withOpacity(0.3),
