@@ -5,7 +5,6 @@ class Calculator {
   static const int meses = 60;
   static const double frete = 120.0;
   static const double seguroTx = 0.01;
-  static const double licencasAno = 600.0;
   static const double adminLocacao = 30.0;
 
   static double taxaMensal(double taxaAnual) {
@@ -25,7 +24,7 @@ class Calculator {
     final fluxos = <double>[-capex];
     
     for (int m = 1; m <= meses; m++) {
-      double fluxoMensal = -(manutAnual / 12 + licencasAno / 12);
+      double fluxoMensal = -(manutAnual / 12);
       
       if (m == meses && params.considerarResidual) {
         fluxoMensal += params.valorCompra * params.valorResidual / 100;
@@ -34,11 +33,12 @@ class Calculator {
       fluxos.add(fluxoMensal);
     }
     
-    final taxa = params.aplicarDesconto ? taxaMensal(params.taxaDesconto) : 0.0;
+    final aplicarDesconto = !params.usarValorNominal;
+    final taxa = aplicarDesconto ? taxaMensal(params.taxaDesconto) : 0.0;
     double soma = 0;
     
     for (int i = 0; i < fluxos.length; i++) {
-      if (params.aplicarDesconto) {
+      if (aplicarDesconto) {
         soma += calcularPV(fluxos[i], taxa, i);
       } else {
         soma += fluxos[i];
@@ -52,8 +52,10 @@ class Calculator {
       fluxos: fluxos,
       detalhes: {
         'capex': capex,
+        'freteEnvio': frete,
         'manutencaoAnual': manutAnual,
         'garantiaExtra': garantiaExtra,
+        'tipoCalculo': params.usarValorNominal ? 'Nominal' : 'VPL',
       },
     );
   }
@@ -63,11 +65,11 @@ class Calculator {
     final manutAnual = params.valorCompra * params.manutencaoPct / 100;
     
     final fluxos = <double>[
-      -(frete + params.valorLocacao * seguroTx + adminLocacao),
+      -(params.valorLocacao * seguroTx + adminLocacao),
     ];
     
     for (int m = 1; m <= meses; m++) {
-      double fluxoMensal = -(opexMensal + licencasAno / 12);
+      double fluxoMensal = -opexMensal;
       
       if (!params.manutencaoInclusa) {
         fluxoMensal -= manutAnual / 12;
@@ -76,13 +78,14 @@ class Calculator {
       fluxos.add(fluxoMensal);
     }
     
-    fluxos.add(-(frete + params.valorLocacao * seguroTx));
+    fluxos.add(-(params.valorLocacao * seguroTx));
     
-    final taxa = params.aplicarDesconto ? taxaMensal(params.taxaDesconto) : 0.0;
+    final aplicarDesconto = !params.usarValorNominal;
+    final taxa = aplicarDesconto ? taxaMensal(params.taxaDesconto) : 0.0;
     double soma = 0;
     
     for (int i = 0; i < fluxos.length; i++) {
-      if (params.aplicarDesconto) {
+      if (aplicarDesconto) {
         soma += calcularPV(fluxos[i], taxa, i);
       } else {
         soma += fluxos[i];
@@ -96,7 +99,10 @@ class Calculator {
       fluxos: fluxos,
       detalhes: {
         'opexMensal': opexMensal,
+        'freteEnvio': 0.0,
+        'freteRetorno': 0.0,
         'manutencaoInclusa': params.manutencaoInclusa,
+        'tipoCalculo': params.usarValorNominal ? 'Nominal' : 'VPL',
       },
     );
   }

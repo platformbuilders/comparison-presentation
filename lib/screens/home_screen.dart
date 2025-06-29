@@ -50,7 +50,6 @@ class HomeScreen extends StatelessWidget {
           final params = snapshot.data!;
           final compraResult = Calculator.calcularCompra(params);
           final locacaoResult = Calculator.calcularLocacao(params);
-          final compraMelhor = compraResult.custoMedioMensal < locacaoResult.custoMedioMensal;
 
           if (isDesktop) {
             return Row(
@@ -60,12 +59,12 @@ class HomeScreen extends StatelessWidget {
                     isCompra: true,
                     value: params.valorCompra,
                     custoMedio: compraResult.custoMedioMensal,
-                    isBetterOption: compraMelhor,
+                    detalhes: compraResult.detalhes,
                     onChanged: (newValue) {
                       final equivalente = Calculator.calcularEquivalente(
                         valorBase: newValue,
                         params: params.copyWith(valorCompra: newValue),
-                        isCompra: false,
+                        isCompra: true,
                       );
                       repository.calcParams.update({
                         'valorCompra': newValue,
@@ -79,12 +78,12 @@ class HomeScreen extends StatelessWidget {
                     isCompra: false,
                     value: params.valorLocacao,
                     custoMedio: locacaoResult.custoMedioMensal,
-                    isBetterOption: !compraMelhor,
+                    detalhes: locacaoResult.detalhes,
                     onChanged: (newValue) {
                       final equivalente = Calculator.calcularEquivalente(
                         valorBase: newValue,
                         params: params.copyWith(valorLocacao: newValue),
-                        isCompra: true,
+                        isCompra: false,
                       );
                       repository.calcParams.update({
                         'valorCompra': equivalente,
@@ -105,12 +104,12 @@ class HomeScreen extends StatelessWidget {
                       isCompra: true,
                       value: params.valorCompra,
                       custoMedio: compraResult.custoMedioMensal,
-                      isBetterOption: compraMelhor,
+                      detalhes: compraResult.detalhes,
                       onChanged: (newValue) {
                         final equivalente = Calculator.calcularEquivalente(
                           valorBase: newValue,
                           params: params.copyWith(valorCompra: newValue),
-                          isCompra: false,
+                          isCompra: true,
                         );
                         repository.calcParams.update({
                           'valorCompra': newValue,
@@ -125,12 +124,12 @@ class HomeScreen extends StatelessWidget {
                       isCompra: false,
                       value: params.valorLocacao,
                       custoMedio: locacaoResult.custoMedioMensal,
-                      isBetterOption: !compraMelhor,
+                      detalhes: locacaoResult.detalhes,
                       onChanged: (newValue) {
                         final equivalente = Calculator.calcularEquivalente(
                           valorBase: newValue,
                           params: params.copyWith(valorLocacao: newValue),
-                          isCompra: true,
+                          isCompra: false,
                         );
                         repository.calcParams.update({
                           'valorCompra': equivalente,
@@ -149,43 +148,108 @@ class HomeScreen extends StatelessWidget {
   }
 
   void _showSettingsModal(BuildContext context) {
+    final repository = RepositoryProvider.of(context);
+    
     showModalBottomSheet(
       context: context,
       backgroundColor: AppColors.blackSide,
+      isScrollControlled: true,
       builder: (context) {
-        return Container(
-          padding: const EdgeInsets.all(24),
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              const Text(
-                'Configurações',
-                style: TextStyle(
-                  color: AppColors.white,
-                  fontSize: 20,
-                  fontWeight: FontWeight.bold,
-                ),
+        return StreamBuilder<CalcParams?>(
+          stream: repository.calcParams.stream,
+          builder: (context, snapshot) {
+            if (!snapshot.hasData) {
+              return const SizedBox.shrink();
+            }
+            
+            final params = snapshot.data!;
+            
+            return Container(
+              padding: const EdgeInsets.all(24),
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  const Text(
+                    'Configurações',
+                    style: TextStyle(
+                      color: AppColors.white,
+                      fontSize: 20,
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
+                  const SizedBox(height: 32),
+                  _buildSettingItem(
+                    'Tipo de Cálculo',
+                    'Escolha entre valor nominal ou VPL (Valor Presente Líquido)',
+                    Switch(
+                      value: params.usarValorNominal,
+                      onChanged: (value) {
+                        repository.calcParams.update({'usarValorNominal': value});
+                      },
+                      activeColor: AppColors.blueSide,
+                    ),
+                    params.usarValorNominal ? 'Nominal' : 'VPL (10% a.a.)',
+                  ),
+                  const SizedBox(height: 32),
+                  TextButton(
+                    onPressed: () => Navigator.pop(context),
+                    child: const Text(
+                      'Fechar',
+                      style: TextStyle(color: AppColors.blueSide),
+                    ),
+                  ),
+                ],
               ),
-              const SizedBox(height: 24),
-              const Text(
-                'Em desenvolvimento...',
-                style: TextStyle(
-                  color: AppColors.greyText,
-                  fontSize: 16,
-                ),
-              ),
-              const SizedBox(height: 24),
-              TextButton(
-                onPressed: () => Navigator.pop(context),
-                child: const Text(
-                  'Fechar',
-                  style: TextStyle(color: AppColors.blueSide),
-                ),
-              ),
-            ],
-          ),
+            );
+          },
         );
       },
+    );
+  }
+
+  Widget _buildSettingItem(String title, String description, Widget control, String currentValue) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Row(
+          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+          children: [
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    title,
+                    style: const TextStyle(
+                      color: AppColors.white,
+                      fontSize: 16,
+                      fontWeight: FontWeight.w600,
+                    ),
+                  ),
+                  const SizedBox(height: 4),
+                  Text(
+                    description,
+                    style: TextStyle(
+                      color: AppColors.white.withOpacity(0.7),
+                      fontSize: 14,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+            control,
+          ],
+        ),
+        const SizedBox(height: 8),
+        Text(
+          'Atual: $currentValue',
+          style: TextStyle(
+            color: AppColors.blueSide,
+            fontSize: 12,
+            fontWeight: FontWeight.w500,
+          ),
+        ),
+      ],
     );
   }
 }
