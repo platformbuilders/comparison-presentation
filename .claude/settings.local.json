@@ -1,0 +1,20 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(flutter create:*)",
+      "Bash(flutter pub add:*)",
+      "Bash(ls:*)",
+      "Bash(mkdir:*)",
+      "Bash(flutter run:*)",
+      "Bash(mv:*)",
+      "Bash(find:*)",
+      "Bash(cp:*)",
+      "Bash(flutter:*)",
+      "Bash(open:*)",
+      "Bash(pkill:*)",
+      "Bash(curl:*)",
+      "Bash(python3:*)"
+    ],
+    "deny": []
+  }
+}
